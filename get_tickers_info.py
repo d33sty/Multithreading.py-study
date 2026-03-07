@@ -126,7 +126,7 @@ user_agent_key = "User-Agent"
 user_agent_value = "Mozilla/5.0"
 headers = {user_agent_key: user_agent_value}
 
-tickers_file = "tickers.txt"
+tickers_file = "data/tickers.txt"
 
 
 if __name__ == "__main__":
