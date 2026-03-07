@@ -1,13 +1,9 @@
 import requests
-import json
 from datetime import datetime, timezone
 from typing import Generator
 from concurrent.futures import ThreadPoolExecutor
-import threading
-import time
 import os
 import csv
-import pandas as pd
 
 
 def get_ticker(file: str) -> Generator[str, None, None]:

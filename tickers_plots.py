@@ -1,5 +1,4 @@
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import pandas as pd
 import os
 
@@ -73,9 +72,6 @@ def plot_normalized_data(data_folder="data"):
     # Показываем график
     fig.show()
     
-    # Сохраняем в HTML файл (опционально)
-    fig.write_html("normalized_prices.html")
-    print("График сохранен в файл normalized_prices.html")
 
 
 if __name__ == "__main__":
