@@ -1,26 +1,23 @@
-from time import sleep, perf_counter
-from itertools import count
-from random import randrange
+def my_awesome_gen():
+    # Ваше решение
+    number = 0
+    while True:
+        received = yield number
+        if isinstance(received, int):
+            number += received
+        elif isinstance(received, float):
+            number *= received
+        else:
+            return "Ошибка: введите число типа int или float"
 
 
-total_count = count(1)
+g = my_awesome_gen()
 
-
-class Fisherman:
-    def __init__(self, name: str = ""):
-        self.name = name
-
-    def get(self):
-        sleep(randrange(1, 11))
-        print(f"{self.name} поймал одну, всего {next(total_count)}")
-
-
-def main():
-    f1 = Fisherman("Рыбак")
-    #  ???
-
-
-if __name__ == "__main__":
-    start_time = perf_counter()
-    main()
-    print(f"total time {perf_counter() - start_time}")
+print(g.send(None))  # Выводит 0
+print(g.send(10))  # Выводит 10
+print(g.send(11))  # Выводит 21
+print(g.send(0.5))  # Выводит 10.5
+print(g.send(100))  # Выводит 110.5
+print(
+    g.send("ok")
+)  # Возбуждается ошибка StopIteration: Ошибка: введите число типа int или float
