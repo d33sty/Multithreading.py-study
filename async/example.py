@@ -1,36 +1,32 @@
-from concurrent.futures import ThreadPoolExecutor
-import time
-import threading as t
-
-fn = open("test.txt", "w", encoding="utf-8")
+entities = []
 
 
-def f1():
-    start_time = time.perf_counter()
-    while time.perf_counter() - start_time < 0.01:
+import asyncio
 
-        print("111", file=fn)
-
-
-def f2():
-    start_time = time.perf_counter()
-    while time.perf_counter() - start_time < 0.01:
-        print("222", file=fn)
+# импортируйте необходимое
+from typing import Callable
+import concurrent.futures
 
 
-def f3():
-    start_time = time.perf_counter()
-    while time.perf_counter() - start_time < 0.01:
-        print("333", file=fn)
+async def main():
+    ents = []
+    blocking_ents = []
+    for e in entities:
+        if isinstance(e, Callable):
+            blocking_ents.append(e)
+        else:
+            ents.append(e)
+
+    with concurrent.futures.ThreadPoolExecutor(len(blocking_ents)) as pool:
+        loop = asyncio.get_running_loop()
+        tasks = [asyncio.create_task(e) for e in ents]
+        blocking_tasks = [loop.run_in_executor(pool, e) for e in blocking_ents]
+        results = []
+        for c in asyncio.as_completed(tasks + blocking_tasks):
+            results.append(await c)
+
+        print(results)
 
 
-funcs = [f1, f2, f3]
-
-thrs = [t.Thread(target=f) for f in funcs]
-for thr in thrs:
-    thr.start()
-
-for thr in thrs:
-    thr.join()
-
-fn.close()
+if __name__ == "__main__":
+    asyncio.run(main())
