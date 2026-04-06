@@ -1,27 +1,36 @@
-import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import time
+import threading as t
+
+fn = open("test.txt", "w", encoding="utf-8")
 
 
-async def my_coroutine_1():
-    print("my_coroutine_1 start")
-    await asyncio.sleep(1)
-    print("my_coroutine_1 end")
-
-
-async def my_coroutine_2():
-    print("my_coroutine_2 start")
-    await asyncio.sleep(1)
-    print("my_coroutine_2 end")
-
-
-async def main():
-    my_task_1 = asyncio.create_task(my_coroutine_1())
-    my_task_2 = asyncio.create_task(my_coroutine_2())
-    await my_task_1
-    await my_task_2
-
-
-if __name__ == "__main__":
+def f1():
     start_time = time.perf_counter()
-    asyncio.run(main())
-    print(f"All done in {time.perf_counter() - start_time:.2f}")
+    while time.perf_counter() - start_time < 0.01:
+
+        print("111", file=fn)
+
+
+def f2():
+    start_time = time.perf_counter()
+    while time.perf_counter() - start_time < 0.01:
+        print("222", file=fn)
+
+
+def f3():
+    start_time = time.perf_counter()
+    while time.perf_counter() - start_time < 0.01:
+        print("333", file=fn)
+
+
+funcs = [f1, f2, f3]
+
+thrs = [t.Thread(target=f) for f in funcs]
+for thr in thrs:
+    thr.start()
+
+for thr in thrs:
+    thr.join()
+
+fn.close()
