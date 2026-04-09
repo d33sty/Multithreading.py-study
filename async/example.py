@@ -1,32 +1,18 @@
-entities = []
-
-
 import asyncio
 
-# импортируйте необходимое
-from typing import Callable
-import concurrent.futures
 
-
-async def main():
-    ents = []
-    blocking_ents = []
-    for e in entities:
-        if isinstance(e, Callable):
-            blocking_ents.append(e)
-        else:
-            ents.append(e)
-
-    with concurrent.futures.ThreadPoolExecutor(len(blocking_ents)) as pool:
-        loop = asyncio.get_running_loop()
-        tasks = [asyncio.create_task(e) for e in ents]
-        blocking_tasks = [loop.run_in_executor(pool, e) for e in blocking_ents]
-        results = []
-        for c in asyncio.as_completed(tasks + blocking_tasks):
-            results.append(await c)
-
-        print(results)
+async def main(file):
+    process = await asyncio.create_subprocess_exec(
+        "python.exe",
+        "-c",
+        "import time; time.sleep(1);"
+        'print("Субпроцесс завершился и напечатал это сообщение.")',
+        stdout=file,
+    )
+    print(process)
+    await asyncio.sleep(2)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    with open("new_file", "w") as file:
+        asyncio.run(main(file))
