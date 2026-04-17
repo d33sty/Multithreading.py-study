@@ -3,6 +3,7 @@ from typing import AsyncGenerator
 import csv
 import os
 import aiohttp
+import time
 
 
 async def get_ticker(file: str) -> AsyncGenerator[str, None]:
@@ -60,37 +61,56 @@ async def get_historical_data(
     """
     url = f"http://iss.moex.com/iss/history/engines/stock/markets/shares/boards/TQBR/securities/{ticker}.json"
 
+    start = 0
+    limit = 100
+    first_chunk = True
+
     params = {}
     if from_date:
         params["from"] = from_date
     if till_date:
         params["till"] = till_date
 
+    # Создаем папку data если её нет
+    os.makedirs("data", exist_ok=True)
+    filename = f"data/{ticker}_historical.csv"
+
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, params=params, timeout=10) as response:
-                data: dict = await response.json()
+            with open(filename, "w", newline="", encoding="utf-8") as csvfile:
+                writer = None
 
-        # Извлекаем данные
-        history_data = data.get("history", {})
-        columns: dict = history_data.get("columns", [])
-        rows: dict = history_data.get("data", [])
+                while True:
+                    params["start"] = start
+                    params["limit"] = limit
 
-        if not rows:
-            print(f"Нет исторических данных для {ticker}")
-            return
+                    async with session.get(url, params=params, timeout=10) as response:
+                        data: dict = await response.json()
 
-        # Создаем папку data если её нет
-        os.makedirs("data", exist_ok=True)
+                    history_data = data.get("history", {})
+                    columns = history_data.get("columns", [])
+                    rows = history_data.get("data", [])
 
-        # Сохраняем в CSV
-        filename = f"data/{ticker}_historical.csv"
-        with open(filename, "w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(columns)  # Заголовки
-            writer.writerows(rows)  # Данные
+                    if not rows:
+                        break
 
-        print(f"✓ История для {ticker} сохранена ({len(rows)} записей)")
+                    # При первом чанке записываем заголовки
+                    if first_chunk:
+                        writer = csv.writer(csvfile)
+                        writer.writerow(columns)
+                        first_chunk = False
+
+                    # Записываем данные текущего чанка
+                    writer.writerows(rows)
+                    csvfile.flush()  # Принудительно сбрасываем буфер в файл
+
+                    # Проверяем, есть ли ещё данные
+                    if len(rows) < limit:
+                        break
+
+                    start += limit
+
+        print(f"✓ История для {ticker} сохранена")
 
     except Exception as e:
         print(f"✗ Ошибка при получении истории для {ticker}: {e}")
@@ -98,8 +118,8 @@ async def get_historical_data(
 
 async def main():
 
-    FROM_DATE = "2023-01-01"  # Начальная дата для исторических данных
-    TILL_DATE = "2024-12-31"  # Конечная дата для исторических данных
+    FROM_DATE = "2005-01-01"  # Начальная дата для исторических данных
+    TILL_DATE = "2026-04-17"  # Конечная дата для исторических данных
 
     print(f"Период для исторических данных: {FROM_DATE} - {TILL_DATE}")
 
@@ -115,4 +135,6 @@ async def main():
 
 
 if __name__ == "__main__":
+    s = time.perf_counter()
     asyncio.run(main())
+print(f"Elapsed: {s-time.perf_counter()}")
